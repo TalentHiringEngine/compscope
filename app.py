@@ -1,9 +1,8 @@
 """
-CompScope — Multi-Source Compensation Research Tool
-====================================================
-US-only. Pulls BLS OEWS, JSearch live postings, and USAJobs
-at metro -> state -> national levels. Shows each source separately
-then blends all available medians into one estimate.
+CompScope — Compensation Research Tool
+=======================================
+US-only. Pulls BLS OEWS (government wage survey) and JSearch (live postings)
+at metro -> state -> national levels. Blends available medians into one estimate.
 
 Run locally:  streamlit run app.py
 """
@@ -15,8 +14,7 @@ import pandas as pd
 
 # Load Streamlit secrets into env vars
 def _load_secrets():
-    for k in ["BLS_API_KEY","USAJOBS_API_KEY","USAJOBS_USER_AGENT",
-              "JSEARCH_API_KEY","ONET_USERNAME","ONET_PASSWORD"]:
+    for k in ["BLS_API_KEY","JSEARCH_API_KEY","ONET_USERNAME","ONET_PASSWORD"]:
         if k not in os.environ:
             try:
                 os.environ[k] = st.secrets[k]
@@ -28,7 +26,6 @@ _load_secrets()
 from data_sources.bls     import BLSClient
 from data_sources.onet    import ONETClient
 from data_sources.jsearch import JSearchClient
-from data_sources.usajobs import USAJobsClient
 from utils.geo            import resolve_msa, STATE_NAMES, STATE_FIPS
 
 st.set_page_config(page_title="CompScope", page_icon="💰", layout="wide",
@@ -69,9 +66,9 @@ h1,h2,h3 { font-family:'DM Serif Display',serif; }
 
 @st.cache_resource
 def get_clients():
-    return BLSClient(), ONETClient(), JSearchClient(), USAJobsClient()
+    return BLSClient(), ONETClient(), JSearchClient()
 
-bls, onet, jsearch, usajobs = get_clients()
+bls, onet, jsearch = get_clients()
 
 def fmt(val):
     try:
@@ -95,7 +92,7 @@ def geo_row(icon, label, median, low=None, high=None):
 
 # Hero
 st.markdown('<div class="hero-title">CompScope</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-sub">US compensation intelligence — metro, state, and national from BLS, live postings, and federal data.</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-sub">US compensation intelligence — metro, state, and national from BLS wage surveys and live job postings.</div>', unsafe_allow_html=True)
 
 # Input
 c1, c2, c3 = st.columns([3, 2, 1])
@@ -180,7 +177,7 @@ if run_btn and job_title and location:
           <div class="src-median">Local/state median used in blend: {src_med}</div>
         </div>""", unsafe_allow_html=True)
     else:
-        st.markdown('<div class="card"><span class="src-header">📊 BLS OEWS</span> — No US data found for this role.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card"><span class="src-header">📊 BLS OEWS</span> — No data found for this role.</div>', unsafe_allow_html=True)
 
     # ── SOURCE 2: JSearch (live postings, US only) ────────────────────────────
     with st.spinner("Fetching live US postings (Indeed, LinkedIn, Glassdoor)…"):
@@ -208,54 +205,13 @@ if run_btn and job_title and location:
             <span class="badge b-live">Real-time · US only</span>
           </div>
           <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.6rem;">
-            Aggregated from Indeed, LinkedIn, Glassdoor, Google Jobs
+            Aggregated from Indeed, LinkedIn, Glassdoor, Google Jobs · Searching: <em>{job_title}</em>
           </div>
           {html}
           <div class="src-median">Local/state median used in blend: {src_med}</div>
         </div>""", unsafe_allow_html=True)
     else:
-        st.markdown('<div class="card"><span class="src-header">📡 Live Job Postings</span> — No US results returned (API key may not be configured).</div>', unsafe_allow_html=True)
-
-    # ── SOURCE 3: USAJobs (federal only — reference, NOT blended) ─────────────
-    with st.spinner("Scanning USAJobs federal postings…"):
-        uj_local    = usajobs.search(job_title, location)
-        uj_national = usajobs.search(job_title, "")
-
-    def uj_stats(posts):
-        mins = [j["salary_min"] for j in posts if j.get("salary_min")]
-        maxs = [j["salary_max"] for j in posts if j.get("salary_max")]
-        if not mins: return None
-        return {"median": round(statistics.median(mins+maxs)),
-                "min": round(min(mins)), "max": round(max(maxs)) if maxs else None,
-                "count": len(posts)}
-
-    us_local = uj_stats(uj_local)    if uj_local    else None
-    us_natl  = uj_stats(uj_national) if uj_national else None
-
-    if us_local or us_natl:
-        html = ""
-        if us_local:
-            html += geo_row("📍", f"{location} ({us_local['count']} federal postings)",
-                            us_local.get("median"), us_local.get("min"), us_local.get("max"))
-        if us_natl:
-            html += geo_row("🌐", f"United States ({us_natl['count']} federal postings)",
-                            us_natl.get("median"), us_natl.get("min"), us_natl.get("max"))
-        st.markdown(f"""<div class="card">
-          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
-            <span class="src-header">🏛 USAJobs — Federal Sector Reference</span>
-            <span class="badge b-state">Federal GS-scale only</span>
-          </div>
-          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">
-            Federal salaries only — not included in private-sector blend
-          </div>
-          <div class="warn-box" style="margin:0.4rem 0 0.6rem 0;font-size:0.8rem;">
-            ⚠ GS-scale federal pay is typically <strong>20–40% below private market</strong> for most roles.
-            Use for public-sector context only.
-          </div>
-          {html}
-        </div>""", unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="card"><span class="src-header">🏛 USAJobs</span> — No federal postings found.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card"><span class="src-header">📡 Live Job Postings</span> — No salary data found in current postings.</div>', unsafe_allow_html=True)
 
     # ── BLENDED ESTIMATE (metro + state only; national as fallback) ───────────
     blend_medians = local_medians if local_medians else natl_medians
@@ -264,7 +220,7 @@ if run_btn and job_title and location:
         geo_scope = "metro + state data" if local_medians else "national data only (no local data available)"
         st.markdown(f"""<div class="blend-box">
           <div style="font-size:0.85rem;color:var(--muted);margin-bottom:0.2rem;">
-            Private-Sector Blended Estimate — {geo_scope}
+            Blended Estimate — {geo_scope}
           </div>
           <div style="font-family:'DM Mono',monospace;font-size:2.2rem;font-weight:700;
                       color:var(--green);line-height:1.2;">{fmt(blended)}</div>
@@ -287,10 +243,9 @@ if run_btn and job_title and location:
 Only metro + state rows feed the blended estimate; national is shown as a reference anchor.
 
 **JSearch** — Real-time US postings from Indeed, LinkedIn, Glassdoor, ZipRecruiter.
-Queried separately at metro, state, and national levels. Only metro + state feed the blend.
-
-**USAJobs** — US federal government postings only. **Not included in the private-sector blend.**
-Federal GS-scale pay is typically 20–40% below private market for most professional roles.
+Queried using your exact job title at metro, state, and national levels.
+Only metro + state feed the blend. Note: many postings don't disclose salary —
+stats are computed from those that do (minimum 2 required).
 
 **Blended estimate** — Mean of available metro- and state-level medians from BLS + JSearch.
 Falls back to national data only if no local/state data is returned.
