@@ -122,7 +122,14 @@ if run_btn and job_title and location:
     soc_code  = chosen["code"]
     soc_title = chosen["title"]
 
-    st.markdown(f"**SOC:** `{soc_code}` · {soc_title}")
+    st.markdown(
+        f"**SOC:** `{soc_code}` · {soc_title}  \n"
+        f"<span style='font-size:0.8rem;color:#7a7368;'>"
+        f"BLS groups similar titles under one standard classification — "
+        f"e.g. Marketing Director, VP Marketing → *Marketing Managers*. "
+        f"This is the correct lookup code for wage data.</span>",
+        unsafe_allow_html=True,
+    )
     st.divider()
 
     # Parse location for JSearch geo-level queries
