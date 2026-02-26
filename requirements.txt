@@ -1,0 +1,6 @@
+streamlit>=1.32.0
+requests>=2.31.0
+pandas>=2.0.0
+thefuzz[speedup]>=0.22.0  # faster fuzzy matching (optional)
+beautifulsoup4>=4.12.0    # for scraper stubs
+playwright>=1.40.0         # for Indeed scraper stub (needs: playwright install chromium)
