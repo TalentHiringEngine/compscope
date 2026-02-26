@@ -47,7 +47,7 @@ class JSearchClient:
             "x-rapidapi-host": JSEARCH_HOST,
         })
 
-    def _fetch_jobs(self, query: str, num_pages: int = 3) -> list[dict]:
+    def _fetch_jobs(self, query: str, num_pages: int = 7) -> list[dict]:
         """
         Fetch job postings from JSearch /search endpoint.
         Returns only full-time, US-based postings.
