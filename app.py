@@ -117,20 +117,15 @@ if run_btn and job_title and location:
         st.error("No SOC code match found. Try a more standard job title.")
         st.stop()
 
-    soc_options = {f"{m['title']} ({m['code']})": m for m in soc_matches[:5]}
-    chosen = soc_options[st.selectbox("Best SOC match — confirm or choose another:", list(soc_options.keys()))]
+    st.caption(
+        "BLS classifies jobs into standard occupational groups — e.g. Marketing Director, "
+        "VP Marketing, and CMO all fall under *Marketing Managers*. "
+        "Confirm the group below; wage data covers everyone in that group."
+    )
+    soc_options = {f"{job_title}  →  {m['title']} ({m['code']})": m for m in soc_matches[:5]}
+    chosen = soc_options[st.selectbox("BLS occupational group:", list(soc_options.keys()))]
     soc_code  = chosen["code"]
     soc_title = chosen["title"]
-
-    st.markdown(
-        f"**Your search:** {job_title} &nbsp;→&nbsp; "
-        f"**BLS classification:** {soc_title} `{soc_code}`  \n"
-        f"<span style='font-size:0.8rem;color:#7a7368;'>"
-        f"BLS groups similar titles under one standard code — e.g. Marketing Director, "
-        f"VP Marketing, and CMO all fall under <em>Marketing Managers</em>. "
-        f"The wage data below reflects that full group.</span>",
-        unsafe_allow_html=True,
-    )
     st.divider()
 
     # Parse location for JSearch geo-level queries
