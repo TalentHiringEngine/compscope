@@ -123,11 +123,12 @@ if run_btn and job_title and location:
     soc_title = chosen["title"]
 
     st.markdown(
-        f"**SOC:** `{soc_code}` · {soc_title}  \n"
+        f"**Your search:** {job_title} &nbsp;→&nbsp; "
+        f"**BLS classification:** {soc_title} `{soc_code}`  \n"
         f"<span style='font-size:0.8rem;color:#7a7368;'>"
-        f"BLS groups similar titles under one standard classification — "
-        f"e.g. Marketing Director, VP Marketing → *Marketing Managers*. "
-        f"This is the correct lookup code for wage data.</span>",
+        f"BLS groups similar titles under one standard code — e.g. Marketing Director, "
+        f"VP Marketing, and CMO all fall under <em>Marketing Managers</em>. "
+        f"The wage data below reflects that full group.</span>",
         unsafe_allow_html=True,
     )
     st.divider()
