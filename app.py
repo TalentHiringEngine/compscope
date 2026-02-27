@@ -41,8 +41,8 @@ h1,h2,h3 { font-family:'DM Serif Display',serif; }
 .hero-title { font-family:'DM Serif Display',serif; font-size:3rem; line-height:1.1; }
 .hero-sub { font-size:1rem; color:var(--muted); margin-bottom:2rem; }
 .card { background:white; border:1px solid var(--border); border-radius:6px;
-        padding:1.2rem 1.5rem; margin-bottom:1rem; }
-.src-header { font-family:'DM Serif Display',serif; font-size:1.1rem; margin:0; }
+        padding:1.2rem 1.5rem; margin-bottom:1rem; color:#0f0e0d; }
+.src-header { font-family:'DM Serif Display',serif; font-size:1.1rem; margin:0; color:#0f0e0d; }
 .geo-row { display:flex; align-items:baseline; gap:1.5rem; flex-wrap:wrap;
            padding:0.45rem 0; border-bottom:1px solid var(--border); }
 .geo-row:last-child { border-bottom:none; }
