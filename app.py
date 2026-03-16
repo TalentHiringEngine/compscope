@@ -340,19 +340,24 @@ if run and job_title and location:
               </div>
             """, unsafe_allow_html=True)
 
-            cols = st.columns(4)
+            cols = st.columns(5)
             with cols[0]:
                 st.markdown('<div class="pct-label">Average Salary</div>', unsafe_allow_html=True)
                 st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--accent);font-weight:500;">${d["median"]:,.0f}</div>', unsafe_allow_html=True)
             with cols[1]:
-                lo = d.get("min") or d.get("pct25")
-                hi = d.get("max") or d.get("pct75")
+                lo = d.get("min")
+                hi = d.get("max")
                 st.markdown('<div class="pct-label">Salary Range</div>', unsafe_allow_html=True)
                 st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${lo:,.0f} – ${hi:,.0f}</div>' if lo and hi else '<div>—</div>', unsafe_allow_html=True)
             with cols[2]:
-                st.markdown('<div class="pct-label">25th / 75th</div>', unsafe_allow_html=True)
-                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${d.get("pct25",0):,.0f} / ${d.get("pct75",0):,.0f}</div>', unsafe_allow_html=True)
+                base = d.get("median_base")
+                st.markdown('<div class="pct-label">Base Salary</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${base:,.0f}</div>' if base else '<div>—</div>', unsafe_allow_html=True)
             with cols[3]:
+                add_pay = d.get("median_additional")
+                st.markdown('<div class="pct-label">Bonus / Add\'l Pay</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${add_pay:,.0f}</div>' if add_pay else '<div>—</div>', unsafe_allow_html=True)
+            with cols[4]:
                 st.markdown('<div class="pct-label">Hourly Rate</div>', unsafe_allow_html=True)
                 st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${hourly_med}/hr</div>' if hourly_med else '<div>—</div>', unsafe_allow_html=True)
 
