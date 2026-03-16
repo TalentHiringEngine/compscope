@@ -14,6 +14,7 @@ import time
 from data_sources.bls import BLSClient
 from onet import ONETClient
 from data_sources.usajobs import USAJobsClient
+from data_sources.jsearch import JSearchClient
 from adzuna import AdzunaClient
 from utils.geo import resolve_msa
 from utils.soc import SOCMapper
@@ -119,9 +120,10 @@ stButton>button {
 # ── Clients (cached) ───────────────────────────────────────────────────────────
 @st.cache_resource
 def get_clients():
-    return BLSClient(), ONETClient(), USAJobsClient(), AdzunaClient(), SOCMapper()
+    jsearch_key = st.secrets.get("JSEARCH_API_KEY", "fdc069935fmshf484da2c3899b89p1f0e18jsn0b030ebcc722")
+    return BLSClient(), ONETClient(), USAJobsClient(), JSearchClient(api_key=jsearch_key), AdzunaClient(), SOCMapper()
 
-bls, onet, usajobs, adzuna, soc_mapper = get_clients()
+bls, onet, usajobs, jsearch, adzuna, soc_mapper = get_clients()
 
 # ── Hero ───────────────────────────────────────────────────────────────────────
 st.markdown('<div class="hero-title">CompScope</div>', unsafe_allow_html=True)
@@ -214,6 +216,18 @@ if run and job_title and location:
         if postings:
             results["usajobs"] = postings
 
+    # ── JSearch (Indeed + LinkedIn + Glassdoor) ────────────────────────────────
+    with st.spinner("Scanning Indeed, LinkedIn & Glassdoor for live salary data…"):
+        city_state = location
+        state_name = geo.get("state_name", location)
+        city_name  = location.split(",")[0].strip()
+        jsearch_data = jsearch.get_geo_levels(job_title, city_name, state_name)
+        if jsearch_data:
+            results["jsearch"] = jsearch_data
+        jsearch_postings = jsearch.get_sample_postings(job_title, city_state)
+        if jsearch_postings:
+            results["jsearch_postings"] = jsearch_postings
+
     # ── Adzuna job postings ────────────────────────────────────────────────────
     with st.spinner("Scanning live job postings for salary ranges (Adzuna)…"):
         adzuna_data = adzuna.search(job_title, location)
@@ -305,6 +319,53 @@ if run and job_title and location:
         df.columns = ["Title", "Min", "Max", "Pay Scale", "Location", "Link"]
         st.dataframe(df, use_container_width=True, hide_index=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── JSearch card ──────────────────────────────────────────────────────────
+    if "jsearch" in results:
+        js = results["jsearch"]
+        for level, label, badge in [("metro","📍 Metro","geo-metro"),("state","🗺 State","geo-state"),("national","🌐 National","geo-national")]:
+            if level not in js:
+                continue
+            d = js[level]
+            hourly_med = round(d["median"] / 2080) if d.get("median") else None
+            st.markdown(f"""
+            <div class="card">
+              <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.8rem;">
+                <h3 style="margin:0;">Indeed · LinkedIn · Glassdoor</h3>
+                <span class="geo-badge {badge}">{label}: {d.get('geo_label','')}</span>
+                <span class="source-chip">🔴 Live postings</span>
+              </div>
+              <div style="color:var(--muted);font-size:0.82rem;margin-bottom:1rem;">
+                Based on {d.get('posting_count','?')} postings with disclosed salary data
+              </div>
+            """, unsafe_allow_html=True)
+
+            cols = st.columns(4)
+            with cols[0]:
+                st.markdown('<div class="pct-label">Average Salary</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--accent);font-weight:500;">${d["median"]:,.0f}</div>', unsafe_allow_html=True)
+            with cols[1]:
+                lo = d.get("min") or d.get("pct25")
+                hi = d.get("max") or d.get("pct75")
+                st.markdown('<div class="pct-label">Salary Range</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${lo:,.0f} – ${hi:,.0f}</div>' if lo and hi else '<div>—</div>', unsafe_allow_html=True)
+            with cols[2]:
+                st.markdown('<div class="pct-label">25th / 75th</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${d.get("pct25",0):,.0f} / ${d.get("pct75",0):,.0f}</div>', unsafe_allow_html=True)
+            with cols[3]:
+                st.markdown('<div class="pct-label">Hourly Rate</div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;">${hourly_med}/hr</div>' if hourly_med else '<div>—</div>', unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+            break  # show most specific geo level only
+
+    if "jsearch_postings" in results and results["jsearch_postings"]:
+        with st.expander(f"🏢 Companies actively hiring ({len(results['jsearch_postings'])} postings)"):
+            df = pd.DataFrame(results["jsearch_postings"])[["title","employer","location","salary_min","salary_max","posted","url"]]
+            df["salary_min"] = df["salary_min"].apply(lambda x: f"${x:,.0f}" if x else "—")
+            df["salary_max"] = df["salary_max"].apply(lambda x: f"${x:,.0f}" if x else "—")
+            df.columns = ["Title","Company","Location","Min","Max","Posted","Link"]
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
     # ── Adzuna job postings card ───────────────────────────────────────────────
     if "adzuna" in results:

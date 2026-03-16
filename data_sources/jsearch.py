@@ -19,7 +19,7 @@ import requests
 from typing import Optional
 
 
-JSEARCH_HOST = "jsearch.p.rapidapi.com"
+JSEARCH_HOST = "jsearch27.p.rapidapi.com"
 JSEARCH_BASE = f"https://{JSEARCH_HOST}"
 
 
