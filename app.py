@@ -435,26 +435,25 @@ if run and job_title and location:
     # ── Source provenance ──────────────────────────────────────────────────────
     with st.expander("Data provenance & methodology"):
         st.markdown("""
+**Indeed · LinkedIn · Glassdoor (via JSearch)** — Live job posting salary estimates
+aggregated from Indeed, LinkedIn, and Glassdoor. Data reflects what employers are
+actively advertising. Metro-level estimates shown when available, with state and
+national fallback. Updated in real time.
+
 **BLS OEWS** — Occupational Employment and Wage Statistics program. Annual employer survey
 covering ~1.1M establishments. Metro-area (MSA/NECTA) data published each April.
-[docs.bls.gov/api](https://www.bls.gov/developers/)
+Reflects base wages only — does not include bonus, equity, or benefits.
+[bls.gov/developers](https://www.bls.gov/developers/)
 
 **O*NET** — Standard Occupational Classification search API. Used to map free-text
-job titles to 6-digit SOC codes. [onetonline.org](https://www.onetonline.org/)
+job titles to standardized 6-digit SOC codes. [onetonline.org](https://www.onetonline.org/)
 
 **USAJobs** — Federal government job postings API. All positions include pay band data.
-Useful for public-sector benchmarking. [developer.usajobs.gov](https://developer.usajobs.gov/)
+For public-sector benchmarking only — federal GS-scale pay is typically 20–40% below
+private-sector rates for tech roles. [developer.usajobs.gov](https://developer.usajobs.gov/)
 
 **Geography resolution** — City/state input is matched to Census CBSA codes, then
 mapped to BLS OEWS area codes. Metro → State → National fallback chain applied automatically.
-
-**Not yet integrated (paid/scraping)**:
-- Payscale Insight Lab API (~$5k/yr)
-- Mercer/iMercer CompAnalyst
-- Lightcast (formerly EMSI Burning Glass) — MSA-level real-time posting analytics
-- Levels.fyi — scraping possible for TC data in tech roles
-- Glassdoor Employer API — requires partnership
-- LinkedIn Salary Insights API — enterprise only
         """)
 
 elif run:
