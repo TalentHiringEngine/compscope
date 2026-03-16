@@ -41,7 +41,7 @@ class JSearchClient:
             "x-rapidapi-host": JSEARCH_HOST,
         })
 
-    def _estimated_salary(self, job_title: str, location: str, location_type: str = "ANY") -> Optional[dict]:
+    def _estimated_salary(self, job_title: str, location: str, location_type: str = "ANY", years_of_experience: str = "ALL") -> Optional[dict]:
         """
         Call /estimated-salary endpoint for a title + location.
         Returns aggregated salary stats or None.
@@ -50,9 +50,10 @@ class JSearchClient:
             return None
 
         params = {
-            "job_title":     job_title,
-            "location":      location,
-            "location_type": location_type,
+            "job_title":           job_title,
+            "location":            location,
+            "location_type":       location_type,
+            "years_of_experience": years_of_experience or "ALL",
         }
         try:
             resp = self.session.get(
@@ -95,27 +96,40 @@ class JSearchClient:
             "confidence":       e.get("confidence", ""),
         }
 
-    def get_geo_levels(self, job_title: str, city: str, state_name: str) -> dict:
+    def get_geo_levels(self, job_title: str, city: str, state_name: str, years_of_experience: str = "ALL") -> dict:
         """
         Fetch salary estimates at metro, state, and national levels.
+        Falls back to broader geo if no data found. Always returns something if API is reachable.
         """
         if not self.api_key:
             return {}
 
+        yoe = years_of_experience or "ALL"
         results = {}
 
-        metro = self._estimated_salary(job_title, f"{city}, {state_name}", "CITY")
+        metro = self._estimated_salary(job_title, f"{city}, {state_name}", "CITY", yoe)
         if metro:
             results["metro"] = {**metro, "geo_label": f"{city}, {state_name}"}
-        else:
-            state = self._estimated_salary(job_title, state_name, "STATE")
+
+        if "metro" not in results:
+            state = self._estimated_salary(job_title, state_name, "STATE", yoe)
             if state:
                 results["state"] = {**state, "geo_label": state_name}
 
         if not results:
-            natl = self._estimated_salary(job_title, "United States", "COUNTRY")
+            natl = self._estimated_salary(job_title, "United States", "COUNTRY", yoe)
             if natl:
                 results["national"] = {**natl, "geo_label": "United States"}
+
+        # If still nothing and a specific exp level was chosen, retry with ALL
+        if not results and yoe != "ALL":
+            metro = self._estimated_salary(job_title, f"{city}, {state_name}", "CITY", "ALL")
+            if metro:
+                results["metro"] = {**metro, "geo_label": f"{city}, {state_name}"}
+            if not results:
+                natl = self._estimated_salary(job_title, "United States", "COUNTRY", "ALL")
+                if natl:
+                    results["national"] = {**natl, "geo_label": "United States"}
 
         return results
 

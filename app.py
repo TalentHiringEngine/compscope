@@ -134,12 +134,24 @@ st.markdown(
 )
 
 # ── Input form ─────────────────────────────────────────────────────────────────
-col1, col2, col3 = st.columns([3, 2, 1])
+col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
 with col1:
     job_title = st.text_input("Job title", placeholder="e.g. Senior Data Engineer")
 with col2:
     location = st.text_input("City, State", placeholder="e.g. Austin, TX")
 with col3:
+    exp_options = {
+        "Any Experience": "ALL",
+        "Less than 1 year": "LESS_THAN_ONE",
+        "1–3 years": "ONE_TO_THREE",
+        "4–6 years": "FOUR_TO_SIX",
+        "7–9 years": "SEVEN_TO_NINE",
+        "10–14 years": "TEN_TO_FOURTEEN",
+        "15+ years": "ABOVE_FIFTEEN",
+    }
+    exp_label = st.selectbox("Experience level (optional)", options=list(exp_options.keys()))
+    years_of_experience = exp_options[exp_label]
+with col4:
     st.write("")
     st.write("")
     run = st.button("Research →", use_container_width=True)
@@ -221,7 +233,7 @@ if run and job_title and location:
         city_state = location
         state_name = geo.get("state_name", location)
         city_name  = location.split(",")[0].strip()
-        jsearch_data = jsearch.get_geo_levels(job_title, city_name, state_name)
+        jsearch_data = jsearch.get_geo_levels(job_title, city_name, state_name, years_of_experience=years_of_experience)
         if jsearch_data:
             results["jsearch"] = jsearch_data
         jsearch_postings = jsearch.get_sample_postings(job_title, city_state)
