@@ -119,7 +119,7 @@ stButton>button {
 
 # ── Clients (cached) ───────────────────────────────────────────────────────────
 @st.cache_resource
-def get_clients():
+def get_clients(_version="v2"):
     jsearch_key = st.secrets.get("JSEARCH_API_KEY", "fdc069935fmshf484da2c3899b89p1f0e18jsn0b030ebcc722")
     return BLSClient(), ONETClient(), USAJobsClient(), JSearchClient(api_key=jsearch_key), AdzunaClient(), SOCMapper()
 
