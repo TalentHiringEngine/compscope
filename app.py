@@ -418,9 +418,7 @@ if run and job_title and location:
         </div></div>""", unsafe_allow_html=True)
 
     elif adzuna.app_id:
-        st.markdown('<div class="warn-box">No Adzuna posting data found for this title/location combination.</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="warn-box"><strong>Job Postings (Adzuna):</strong> Add a free API key to see live salary ranges from job postings. Register at <a href="https://developer.adzuna.com/signup" target="_blank">developer.adzuna.com</a> and set <code>ADZUNA_APP_ID</code> / <code>ADZUNA_APP_KEY</code> env vars.</div>', unsafe_allow_html=True)
+        pass  # JSearch is primary source; suppress redundant Adzuna warning
 
     # ── Context note ───────────────────────────────────────────────────────────
     st.markdown("""
