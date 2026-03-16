@@ -11,12 +11,12 @@ import streamlit as st
 import pandas as pd
 import json
 import time
-from bls import BLSClient
+from data_sources.bls import BLSClient
 from onet import ONETClient
-from usajobs import USAJobsClient
+from data_sources.usajobs import USAJobsClient
 from adzuna import AdzunaClient
-from geo import resolve_msa
-from soc import SOCMapper
+from utils.geo import resolve_msa
+from utils.soc import SOCMapper
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
